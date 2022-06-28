@@ -85,6 +85,10 @@ class Todos(db.Model):
         result = { field: getattr(self, field) for field in todo_field}
         return result
 
+"""
+Uncomment db.create_all() if DATABASE not exists or first deploy
+But if update or DATABASE exists comment db.create_all()
+"""
 
 # Create DB if not exists
 # db.create_all()
