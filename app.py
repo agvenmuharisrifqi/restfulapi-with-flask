@@ -87,7 +87,7 @@ class Todos(db.Model):
 
 
 # Create DB if not exists
-db.create_all()
+# db.create_all()
 
 # Decorator Token
 def token_required(func):
