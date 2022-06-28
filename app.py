@@ -1,10 +1,9 @@
 from functools import wraps
-from unittest import result
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from apiwithflask.func import slugify, data_parser
+from func import slugify, data_parser
 import jwt
 import os
 import datetime
@@ -14,14 +13,19 @@ app = Flask(__name__)
 api = Api(app)
 
 # Setup CORS
-ALOWED_HOSTS = os.environ.get('ALOWED_HOSTS', '*')
+ALOWED_HOSTS = os.environ.get('ALOWED_HOSTS', '*').split(',')
 CORS(app, resources={r"/api/*": {"origins": ALOWED_HOSTS}})
 
 
 # Setup DB
 db = SQLAlchemy(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_URL = os.environ.get('DATABASE_URL', "sqlite:///" + os.path.join(BASE_DIR, "db.sqlite"))
+DATABASE_URL = os.environ.get('DATABASE_URL', None)
+if DATABASE_URL is None:
+    DATABASE_URL = "sqlite:///" + os.path.join(BASE_DIR, "db.sqlite")
+else:
+    DATA_URL = DATABASE_URL.split(':')
+    DATABASE_URL = 'postgresql:' + ':'.join(DATA_URL[1:])
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', '*4yv_l=hz)fy#vtovmil_xsypkbvk8qq$h_aa%)c87w@dqn=l=')
 
