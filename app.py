@@ -27,14 +27,18 @@ else:
     DATA_URL = DATABASE_URL.split(':')
     DATABASE_URL = 'postgresql:' + ':'.join(DATA_URL[1:])
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', '*4yv_l=hz)fy#vtovmil_xsypkbvk8qq$h_aa%)c87w@dqn=l=')
+app.config['SECRET_KEY'] = os.environ.get(
+    'SECRET_KEY', '*4yv_l=hz)fy#vtovmil_xsypkbvk8qq$h_aa%)c87w@dqn=l=')
 
 # Create Model User
+
+
 class User(db.Model):
     global user_field
     user_field = ['id', 'name', 'status']
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True,
+                   autoincrement=True, nullable=False)
     name = db.Column(db.String(255))
     status = db.Column(db.String(255))
     slug = db.Column(db.String(255))
@@ -43,7 +47,8 @@ class User(db.Model):
     # Method for save
     def save(self):
         try:
-            self.slug = self.slug if self.slug is not None else slugify(self.name)
+            self.slug = self.slug if self.slug is not None else slugify(
+                self.name)
             db.session.add(self)
             db.session.commit()
             return True
@@ -53,14 +58,16 @@ class User(db.Model):
     # Property for display after save
     @property
     def serialize(self):
-        result = { field: getattr(self, field) for field in user_field}
+        result = {field: getattr(self, field) for field in user_field}
         return result
+
 
 class Todos(db.Model):
     global todo_field
     todo_field = ['id', 'activity', 'date', 'important', 'completed']
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True,
+                   autoincrement=True, nullable=False)
     activity = db.Column(db.Text)
     date = db.Column(db.Date)
     important = db.Column(db.Boolean)
@@ -78,12 +85,13 @@ class Todos(db.Model):
         except:
             return False
 
-    
     # Property for display after save
+
     @property
     def serialize(self):
-        result = { field: getattr(self, field) for field in todo_field}
+        result = {field: getattr(self, field) for field in todo_field}
         return result
+
 
 """
 Uncomment db.create_all() if DATABASE not exists or first deploy
@@ -94,6 +102,8 @@ But if update or DATABASE exists comment db.create_all()
 # db.create_all()
 
 # Decorator Token
+
+
 def token_required(func):
     @wraps(func)
     def decorator(*args, **kwargs):
@@ -109,10 +119,14 @@ def token_required(func):
     return decorator
 
 # Get data in token
+
+
 def get_current_user_from_jwt(jwt_token):
     return jwt.decode(jwt_token, app.config['SECRET_KEY'], algorithms=['HS256'])
 
 # Create token
+
+
 def create_token(user):
     token = jwt.encode(
         {
@@ -123,7 +137,7 @@ def create_token(user):
     )
     # Create data user and token then return data
     result = jsonify(
-        token = {
+        token={
             'token': token,
             'message': 'This token you can use to access other url, token will expire in 3 hours.'
         }
@@ -131,11 +145,14 @@ def create_token(user):
     return result
 
 # View
+
+
 class NameUserList(Resource):
     def get(self):
         all_user = User.query.all()
         list_name = [user.name for user in all_user]
         return make_response(jsonify(names=list_name), 200)
+
 
 class UserDetail(Resource):
     """
@@ -149,10 +166,13 @@ class UserDetail(Resource):
             todo = Todos.query.filter_by(usertodo_id=user.id)
         except:
             return make_response(jsonify(error={'message': 'The data you are looking for was not found.'}), 404)
-        return make_response(jsonify(user=data_parser(user, user_field), todo=data_parser(todo, todo_field, many=True)), 200)
+        result = data_parser(user, user_field)
+        result['todo'] = data_parser(todo, todo_field, many=True)
+        return make_response(jsonify(result), 200)
     """
     For login and signup
     """
+
     def post(self):
         # Status for login or signup
         status_code = 200
@@ -219,9 +239,12 @@ class UserDetail(Resource):
         db.session.commit()
         return None, 204
 
+
 """
 Get List ToDo and Create New ToDo
 """
+
+
 class TodoList(Resource):
     """
     Get user todo list
@@ -254,14 +277,18 @@ class TodoList(Resource):
         _completed = request.form.get('completed')
         _completed = True if _completed is not None and _important != 'false' else False
         _user_id = current_user['id']
-        todos = Todos(activity=_activity, date=_date, important=_important, completed=_completed, usertodo_id=_user_id)
+        todos = Todos(activity=_activity, date=_date, important=_important,
+                      completed=_completed, usertodo_id=_user_id)
         todos.save()
         result = jsonify(todos.serialize)
         return make_response(result, 201)
 
+
 """
 Get ToDo Detail and Update ToDo Detail and Delete ToDo
 """
+
+
 class TodoDetail(Resource):
     """
     Get detail todo
@@ -270,7 +297,8 @@ class TodoDetail(Resource):
     def get(self, todoID):
         try:
             current_user = get_current_user_from_jwt(request.args.get('token'))
-            query = Todos.query.filter_by(usertodo_id=current_user['id'], id=todoID).first_or_404()
+            query = Todos.query.filter_by(
+                usertodo_id=current_user['id'], id=todoID).first_or_404()
         except:
             return make_response(jsonify(error={'message': 'The data you are looking for was not found.'}), 404)
         result = jsonify(data_parser(query, todo_field))
@@ -282,7 +310,8 @@ class TodoDetail(Resource):
     def put(self, todoID):
         try:
             current_user = get_current_user_from_jwt(request.args.get('token'))
-            query = Todos.query.filter_by(usertodo_id=current_user['id'], id=todoID).first_or_404()
+            query = Todos.query.filter_by(
+                usertodo_id=current_user['id'], id=todoID).first_or_404()
         except:
             return make_response(jsonify(error={'message': 'The data you are looking for was not found.'}), 404)
         _activity = request.form.get('activity', None)
@@ -314,12 +343,14 @@ class TodoDetail(Resource):
     def delete(self, todoID):
         try:
             current_user = get_current_user_from_jwt(request.args.get('token'))
-            query = Todos.query.filter_by(usertodo_id=current_user['id'], id=todoID).first_or_404()
+            query = Todos.query.filter_by(
+                usertodo_id=current_user['id'], id=todoID).first_or_404()
         except:
             return make_response(jsonify(error={'message': 'The data you are looking for was not found.'}), 404)
         db.session.delete(query)
         db.session.commit()
         return None, 204
+
 
 class TokenRefresh(Resource):
     @token_required
@@ -329,12 +360,15 @@ class TokenRefresh(Resource):
         result = create_token(query)
         return make_response(result, 200)
 
+
 # Routers
 api.add_resource(TokenRefresh, '/api/token', methods=['GET'])
 api.add_resource(NameUserList, '/api/names', methods=['GET'])
-api.add_resource(UserDetail, '/api/user', methods=['GET', 'POST', 'PUT', 'DELETE'])
+api.add_resource(UserDetail, '/api/user',
+                 methods=['GET', 'POST', 'PUT', 'DELETE'])
 api.add_resource(TodoList, '/api/user/todo', methods=['GET', 'POST'])
-api.add_resource(TodoDetail, '/api/user/todo/<int:todoID>', methods=['GET', 'PUT', 'DELETE'])
+api.add_resource(TodoDetail, '/api/user/todo/<int:todoID>',
+                 methods=['GET', 'PUT', 'DELETE'])
 
 if __name__ == '__main__':
     app.run(debug=True)
