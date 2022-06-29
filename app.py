@@ -145,10 +145,11 @@ class UserDetail(Resource):
     def get(self):
         try:
             current_user = get_current_user_from_jwt(request.args.get('token'))
-            query = User.query.get_or_404(current_user.get('id'))
+            user = User.query.get_or_404(current_user.get('id'))
+            todo = Todos.query.filter_by(usertodo_id=user.id)
         except:
             return make_response(jsonify(error={'message': 'The data you are looking for was not found.'}), 404)
-        return make_response(jsonify(data_parser(query, user_field)), 200)
+        return make_response(jsonify(user=data_parser(user, user_field), todo=data_parser(todo, todo_field, many=True)), 200)
     """
     For login and signup
     """
