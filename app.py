@@ -37,8 +37,12 @@ class User(db.Model):
     global user_field
     user_field = ['id', 'name', 'status']
 
-    id = db.Column(db.Integer, primary_key=True,
-                   autoincrement=True, nullable=False)
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False
+    )
     name = db.Column(db.String(255))
     status = db.Column(db.String(255))
     slug = db.Column(db.String(255))
@@ -66,8 +70,12 @@ class Todos(db.Model):
     global todo_field
     todo_field = ['id', 'activity', 'date', 'important', 'completed']
 
-    id = db.Column(db.Integer, primary_key=True,
-                   autoincrement=True, nullable=False)
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True,
+        nullable=False
+    )
     activity = db.Column(db.Text)
     date = db.Column(db.Date)
     important = db.Column(db.Boolean)
@@ -109,12 +117,12 @@ def token_required(func):
     def decorator(*args, **kwargs):
         token = request.args.get('token')
         if not token:
-            return make_response(jsonify(error={'message': 'Token is required.'}))
+            return make_response(jsonify(error={'message': 'Token is required.'}), 401)
         # Decode token
         try:
             jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         except:
-            return make_response(jsonify(error={'message': 'Token is invalid.'}))
+            return make_response(jsonify(error={'message': 'Token is invalid.'}), 401)
         return func(*args, **kwargs)
     return decorator
 
@@ -277,8 +285,13 @@ class TodoList(Resource):
         _completed = request.form.get('completed')
         _completed = True if _completed is not None and _important != 'false' else False
         _user_id = current_user['id']
-        todos = Todos(activity=_activity, date=_date, important=_important,
-                      completed=_completed, usertodo_id=_user_id)
+        todos = Todos(
+            activity=_activity,
+            date=_date,
+            important=_important,
+            completed=_completed,
+            usertodo_id=_user_id
+        )
         todos.save()
         result = jsonify(todos.serialize)
         return make_response(result, 201)
